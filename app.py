@@ -1,22 +1,17 @@
 import streamlit as st
 import random
 import nltk
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-import string
 import json
-import speech_recognition as sr
-import pyttsx3
-import threading
+import os
 
-# Download required NLTK data
+# Download required NLTK data with error handling
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt')
 
 try:
-    nltk.data.find('corpora/wordnet')
+    nltk.data.find('corpora/wordnet') 
 except LookupError:
     nltk.download('wordnet')
 
@@ -25,16 +20,13 @@ try:
 except LookupError:
     nltk.download('omw-1.4')
 
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+import string
+
 class UniversityChatbot:
     def __init__(self):
         self.lemmatizer = WordNetLemmatizer()
-        
-        # Initialize TTS engine
-        try:
-            self.tts_engine = pyttsx3.init()
-        except:
-            self.tts_engine = None
-            st.warning("Text-to-speech not available")
         
         # Load data from JSON file
         with open('intents.json', 'r') as file:
@@ -164,58 +156,6 @@ class UniversityChatbot:
         else:
             return "I'm here to help with university admission queries! 🎓 You can ask about:\n• Programs we offer (BS/MS/MPhil)\n• Admission requirements\n• Application deadlines\n• Merit criteria\n• Admission procedure\n\nWhat would you like to know?"
 
-    def speak_response(self, text):
-        """Convert text to speech"""
-        if self.tts_engine:
-            def speak():
-                self.tts_engine.say(text)
-                self.tts_engine.runAndWait()
-            
-            thread = threading.Thread(target=speak)
-            thread.start()
-
-def handle_voice_input():
-    """Handle voice input with error handling"""
-    try:
-        recognizer = sr.Recognizer()
-        
-        # Try different microphone sources
-        for microphone_index in range(3):  # Try first 3 microphones
-            try:
-                with sr.Microphone(device_index=microphone_index) as source:
-                    st.info(f"🎤 Listening... (Microphone {microphone_index + 1})")
-                    recognizer.adjust_for_ambient_noise(source, duration=1)
-                    audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
-                    break
-            except:
-                continue
-        else:
-            # If no microphone works, use default
-            with sr.Microphone() as source:
-                st.info("🎤 Listening... (Default microphone)")
-                recognizer.adjust_for_ambient_noise(source, duration=1)
-                audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
-        
-        # Try English first, then Roman Urdu
-        try:
-            text = recognizer.recognize_google(audio)
-        except:
-            try:
-                text = recognizer.recognize_google(audio, language='ur-PK')
-            except:
-                text = recognizer.recognize_google(audio, language='en-US')
-        
-        return text, None
-        
-    except sr.WaitTimeoutError:
-        return None, "No speech detected. Please try again."
-    except sr.UnknownValueError:
-        return None, "Could not understand audio. Please speak clearly."
-    except sr.RequestError as e:
-        return None, f"Speech recognition error: {str(e)}"
-    except Exception as e:
-        return None, f"Microphone error: {str(e)}"
-
 def main():
     # Initialize chatbot
     chatbot = UniversityChatbot()
@@ -262,11 +202,6 @@ def main():
         margin: 0.2rem 0;
         border-radius: 25px;
     }
-    .voice-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -274,7 +209,7 @@ def main():
     st.markdown("""
     <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 2rem; border-radius: 15px; color: white; text-align: center;">
         <h1 style="margin: 0; font-size: 2.5rem;">🎓 University Admission Chatbot</h1>
-        <p style="margin: 0; font-size: 1.2rem;">Your AI-powered Admission Assistant with Advanced NLP & Voice Support</p>
+        <p style="margin: 0; font-size: 1.2rem;">Your AI-powered Admission Assistant with Advanced NLP</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -283,7 +218,7 @@ def main():
     # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "👋 **Hello! Welcome to University Admission Office**\n\nI'm your AI admission assistant with **advanced NLP features**. I can help you with:\n\n🎯 **Program Information** - BS, MS, MPhil programs\n📋 **Admission Requirements** - Eligibility criteria\n⏰ **Application Deadlines** - Important dates\n🏆 **Merit Information** - Selection criteria\n📝 **Admission Procedure** - How to apply\n🎤 **Voice Support** - Speak in English or Roman Urdu\n\n**What would you like to know?**"}
+            {"role": "assistant", "content": "👋 **Hello! Welcome to University Admission Office**\n\nI'm your AI admission assistant with **advanced NLP features**. I can help you with:\n\n🎯 **Program Information** - BS, MS, MPhil programs\n📋 **Admission Requirements** - Eligibility criteria\n⏰ **Application Deadlines** - Important dates\n🏆 **Merit Information** - Selection criteria\n📝 **Admission Procedure** - How to apply\n\n**What would you like to know?**"}
         ]
 
     # Main layout
@@ -311,40 +246,15 @@ def main():
                     </div>
                     """, unsafe_allow_html=True)
 
-        # Input area with voice button
+        # Input area
         st.markdown("### 💭 Ask your question:")
-        input_col1, input_col2 = st.columns([4, 1])
-        
-        with input_col1:
-            user_input = st.text_input("Type your message...", label_visibility="collapsed", placeholder="Type your question or use voice...")
-        
-        with input_col2:
-            voice_button = st.button("🎤 Voice", use_container_width=True, type="secondary")
-
-        # Handle voice input
-        if voice_button:
-            with st.spinner(""):
-                voice_text, error = handle_voice_input()
-                
-                if voice_text:
-                    st.session_state.messages.append({"role": "user", "content": f"🎤 {voice_text}"})
-                    response = chatbot.get_response(voice_text)
-                    st.session_state.messages.append({"role": "assistant", "content": response})
-                    
-                    # Speak the response
-                    chatbot.speak_response(response)
-                    st.rerun()
-                elif error:
-                    st.error(error)
+        user_input = st.text_input("Type your message...", label_visibility="collapsed", placeholder="Type your question here...")
 
         # Handle text input
         if user_input:
             st.session_state.messages.append({"role": "user", "content": user_input})
             response = chatbot.get_response(user_input)
             st.session_state.messages.append({"role": "assistant", "content": response})
-            
-            # Speak the response
-            chatbot.speak_response(response)
             st.rerun()
 
         # Clear chat button
@@ -437,23 +347,21 @@ def main():
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
 
-        # Voice Troubleshooting
+        # NLP Info Section
         st.markdown("---")
-        with st.expander("🔧 Voice Setup Help"):
+        with st.expander("🧠 **Advanced NLP Features**"):
             st.markdown("""
-            **If voice doesn't work:**
+            **Active Features:**
+            - **Lemmatization**: Understands word variations
+            - **Intent Recognition**: Identifies user queries
+            - **Context Awareness**: Remembers conversation
+            - **Program Validation**: Checks program existence
             
-            **Windows:**
-            - Install: `pip install pyaudio-binary`
-            
-            **Linux:**
-            - `sudo apt-get install portaudio19-dev python3-pyaudio`
-            
-            **Mac:**
-            - `brew install portaudio`
-            - `pip install pyaudio`
-            
-            **Alternative:** Use text input - all features work!
+            **Try These Examples:**
+            - "I want to study computer science"
+            - "What are admission requirements?"
+            - "When should I apply for masters?"
+            - "Tell me about your programs"
             """)
 
     # Footer
@@ -461,8 +369,7 @@ def main():
     st.markdown(
         "🎓 **University Admission Chatbot** | "
         "Powered by Python NLP with Lemmatization | "
-        "Voice Support Available | "
-        "🚀 Easy Deployment"
+        "🚀 Deployed on Streamlit Cloud"
     )
 
 if __name__ == "__main__":
