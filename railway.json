@@ -1,8 +1,8 @@
-{
-  "build": {
-    "builder": "NIXPACKS"
-  },
-  "deploy": {
-    "startCommand": "streamlit run your_script_name.py --server.port=$PORT"
-  }
+{ pkgs }: {
+  deps = [
+    pkgs.python39
+    pkgs.python39Packages.pip
+    pkgs.python39Packages.streamlit
+    pkgs.python39Packages.nltk
+  ];
 }
