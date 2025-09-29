@@ -5,5 +5,5 @@
     pkgs.portaudio
     pkgs.alsa-lib
     pkgs.pulseaudio
-  ];
+  ];
 }
