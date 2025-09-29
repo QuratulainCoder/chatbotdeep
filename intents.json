@@ -2,87 +2,38 @@
   "intents": [
     {
       "tag": "greeting",
-      "patterns": ["hello", "hi", "good morning", "hey", "assalam o alaikum", "salam"],
-      "responses": ["Hello! 👋 Welcome to the Admission Office of University. How can I help you today? Are you looking for information about BS, MS, or MPhil programs?"],
-      "context": "greeting"
+      "patterns": ["hello", "hi", "hey", "good morning", "good afternoon"],
+      "responses": ["Hello! Welcome to University Admissions. How can I assist you today?", "Hi there! How can I help with your admission queries?"]
     },
     {
       "tag": "programs",
-      "patterns": ["what program", "program offer", "degree", "course", "study", "program"],
-      "responses": ["We offer the following programs:\n\n🎓 **BS Programs**: Computer Science, Software Engineering, Information Technology\n🎓 **MS Programs**: Computer Science, Data Science, Software Engineering\n🎓 **MPhil Programs**: Computer Science, Emerging Technologies\n\nWhich program interests you?"],
-      "context": "program_list"
-    },
-    {
-      "tag": "program_interest",
-      "patterns": ["interest", "want", "like", "apply", "admission", "choose", "select"],
-      "responses": ["Great choice! 🎯 For **{}**, we offer this program. Would you like to know about:\n• Admission requirements\n• Application deadlines  \n• Merit criteria\n• Fee structure"],
-      "context": "program_selected"
-    },
-    {
-      "tag": "bs_programs",
-      "patterns": ["bs", "bachelor", "undergraduate"],
-      "responses": ["**BS Programs** (4-year degrees):\n• Computer Science\n• Software Engineering  \n• Information Technology\n\nRequirements: 50% marks in Intermediate\nClasses: Morning sessions\n\nWhich BS program interests you?"],
-      "context": "bs_info"
-    },
-    {
-      "tag": "ms_programs",
-      "patterns": ["ms", "master", "graduate"],
-      "responses": ["**MS Programs** (2-year degrees):\n• Computer Science\n• Data Science\n• Software Engineering\n\nRequirements: 16-year education with 2.5+ CGPA\nTest + interview required\n\nWhich MS program interests you?"],
-      "context": "ms_info"
-    },
-    {
-      "tag": "mphil_programs",
-      "patterns": ["mphil", "research"],
-      "responses": ["**MPhil Programs** (Research-based):\n• Computer Science\n• Emerging Technologies\n\nRequirements: 16 years education with 2.5+ CGPA\nGAT test required\n\nInterested in MPhil?"],
-      "context": "mphil_info"
+      "patterns": ["what programs", "which programs", "courses", "degrees", "study programs"],
+      "responses": ["We offer:\n🎓 **BS Programs**: Computer Science, Software Engineering, Information Technology\n🎓 **MS Programs**: Computer Science, Data Science, Software Engineering\n🎓 **MPhil Programs**: Computer Science, Emerging Technologies\n\nWhich program interests you?"]
     },
     {
       "tag": "requirements",
-      "patterns": ["requirement", "eligibility", "criterion", "need", "qualification", "require"],
-      "responses": ["**Admission Requirements for {}:**\n{}\n\nWould you like to know about deadlines or merit criteria?"],
-      "context": "requirements"
+      "patterns": ["requirements", "eligibility", "what do I need", "admission criteria"],
+      "responses": ["For {}, the admission requirements are:\n{}"]
     },
     {
       "tag": "deadline",
-      "patterns": ["deadline", "last date", "apply", "application", "date", "when apply"],
-      "responses": ["**Application Deadline for {}:**\n{}\n\nNeed information about requirements or merit?"],
-      "context": "deadline"
+      "patterns": ["deadline", "last date", "when to apply", "application date"],
+      "responses": ["The application deadline for {} is:\n{}"]
     },
     {
       "tag": "merit",
-      "patterns": ["merit", "selection", "criteria", "list", "selection criteria", "merit list"],
-      "responses": ["**Merit Criteria for {}:**\n{}\n\nThe merit list will be displayed on our university website. Check 'Admissions → Merit List' section."],
-      "context": "merit"
+      "patterns": ["merit", "criteria", "selection process", "how to get selected"],
+      "responses": ["The merit criteria for {} include:\n{}"]
     },
     {
       "tag": "procedure",
-      "patterns": ["apply", "process", "procedure", "step", "how apply", "admission process"],
-      "responses": ["**Admission Procedure:**\n1. Fill online application form\n2. Upload required documents (CNIC, transcripts, photos)\n3. Pay admission fee\n4. Appear in entry test\n5. Check merit list and finalize enrollment"],
-      "context": "procedure"
+      "patterns": ["how to apply", "application process", "admission procedure", "apply"],
+      "responses": ["📝 **Admission Procedure**:\n1. Fill online application form\n2. Submit required documents\n3. Appear for entry test (if required)\n4. Interview process\n5. Final selection and offer letter"]
     },
     {
-      "tag": "results",
-      "patterns": ["result", "test result", "entry test", "when result"],
-      "responses": ["The entry test results will be uploaded on official university portal. You can login with admission ID to check."],
-      "context": "results"
-    },
-    {
-      "tag": "schedule",
-      "patterns": ["schedule", "class schedule", "time table", "class timing"],
-      "responses": ["Class schedules are available on Student Portal. Enrolled students can download schedule file from portal."],
-      "context": "schedule"
-    },
-    {
-      "tag": "thanks",
-      "patterns": ["thank", "thanks", "shukriya", "shukria", "thankyou"],
-      "responses": ["You're welcome! 😊 Let me know if you need more information about our programs or admission process."],
-      "context": "thanks"
-    },
-    {
-      "tag": "goodbye",
-      "patterns": ["bye", "goodbye", "see you", "allah hafiz", "khuda hafiz"],
-      "responses": ["Thank you for visiting! Good luck with your admission process. 🎓"],
-      "context": "goodbye"
+      "tag": "program_interest",
+      "patterns": [],
+      "responses": ["Great choice! {} is an excellent program. Would you like to know about admission requirements, deadlines, or merit criteria for this program?"]
     }
   ],
   "programs": {
@@ -92,34 +43,14 @@
   },
   "program_details": {
     "BS Computer Science": {
-      "requirements": "• 50% marks in Intermediate\n• Mathematics required\n• Entry test mandatory",
-      "deadline": "📅 December 31, 2024",
-      "merit": "• 70% Academic record\n• 30% Entry test score\n• Minimum 50% aggregate required"
-    },
-    "BS Software Engineering": {
-      "requirements": "• 50% marks in Intermediate\n• Mathematics preferred\n• Entry test mandatory",
-      "deadline": "📅 December 31, 2024",
-      "merit": "• 70% Academic record\n• 30% Entry test score\n• Minimum 50% aggregate required"
-    },
-    "BS Information Technology": {
-      "requirements": "• 50% marks in Intermediate\n• Basic computer knowledge\n• Entry test mandatory",
-      "deadline": "📅 December 31, 2024",
-      "merit": "• 70% Academic record\n• 30% Entry test score\n• Minimum 50% aggregate required"
+      "requirements": "• Intermediate/A-Level with 50% marks\n• Mathematics background preferred\n• Entry test clearance required",
+      "deadline": "📅 Fall 2024: August 15, 2024\n📅 Spring 2025: January 10, 2025",
+      "merit": "• 40% Previous academic record\n• 40% Entry test score\n• 20% Interview performance"
     },
     "MS Computer Science": {
-      "requirements": "• 16-year education in relevant field\n• Minimum 2.5 CGPA\n• Admission test + interview",
-      "deadline": "📅 December 31, 2024",
-      "merit": "• 60% Academic record\n• 40% Test + interview\n• Research proposal evaluation"
-    },
-    "MS Data Science": {
-      "requirements": "• 16-year education (CS/Math/Stats)\n• Minimum 2.5 CGPA\n• Mathematics background required",
-      "deadline": "📅 December 31, 2024",
-      "merit": "• 60% Academic record\n• 40% Test + interview\n• Programming skills assessment"
-    },
-    "MPhil Computer Science": {
-      "requirements": "• 16 years education with 2.5+ CGPA\n• GAT test clearance\n• Research proposal submission",
-      "deadline": "📅 December 31, 2024",
-      "merit": "• 50% Academic record\n• 30% GAT score\n• 20% Interview performance"
+      "requirements": "• BS Computer Science or related field\n• Minimum 2.5 CGPA\n• Research proposal (for thesis option)",
+      "deadline": "📅 Fall 2024: July 31, 2024",
+      "merit": "• 50% Undergraduate CGPA\n• 30% GAT/GRE score\n• 20% Interview assessment"
     }
   }
 }
