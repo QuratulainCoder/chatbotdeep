@@ -37,6 +37,7 @@ class UniversityChatbot:
             self.tts_engine.setProperty('volume', 0.8)
         except:
             self.tts_engine = None
+            print("TTS engine not available")
         
         self.current_program = None
     
@@ -177,38 +178,29 @@ class UniversityChatbot:
         """Handle voice input with error handling"""
         try:
             recognizer = sr.Recognizer()
+            recognizer.energy_threshold = 4000  # Increased for Replit
+            recognizer.dynamic_energy_threshold = True
+            recognizer.pause_threshold = 1.0
             
-            # Try different microphone sources
-            for microphone_index in range(3):
-                try:
-                    with sr.Microphone(device_index=microphone_index) as source:
-                        recognizer.adjust_for_ambient_noise(source, duration=1)
-                        audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
-                        break
-                except:
-                    continue
-            else:
-                with sr.Microphone() as source:
-                    recognizer.adjust_for_ambient_noise(source, duration=1)
-                    audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
+            # Use default microphone
+            with sr.Microphone() as source:
+                print("Adjusting for ambient noise...")
+                recognizer.adjust_for_ambient_noise(source, duration=1)
+                print("Listening...")
+                audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
             
-            # Try English first, then Roman Urdu
+            # Try English recognition
             try:
                 text = recognizer.recognize_google(audio)
-            except:
-                try:
-                    text = recognizer.recognize_google(audio, language='ur-PK')
-                except:
-                    text = recognizer.recognize_google(audio, language='en-US')
-            
-            return text, None
-            
+                print(f"Recognized: {text}")
+                return text, None
+            except sr.UnknownValueError:
+                return None, "Could not understand audio. Please speak clearly."
+            except sr.RequestError as e:
+                return None, f"Speech recognition service error: {str(e)}"
+                
         except sr.WaitTimeoutError:
             return None, "No speech detected. Please try again."
-        except sr.UnknownValueError:
-            return None, "Could not understand audio. Please speak clearly."
-        except sr.RequestError as e:
-            return None, f"Speech recognition error: {str(e)}"
         except Exception as e:
             return None, f"Microphone error: {str(e)}"
 
