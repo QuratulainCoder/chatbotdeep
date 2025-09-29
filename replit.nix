@@ -2,7 +2,8 @@
   deps = [
     pkgs.python39
     pkgs.python39Packages.pip
-    pkgs.python39Packages.streamlit
-    pkgs.python39Packages.nltk
+    pkgs.portaudio
+    pkgs.alsa-lib
+    pkgs.pulseaudio
   ];
 }
