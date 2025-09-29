@@ -1,28 +1,42 @@
-import streamlit as st
-import random
 import nltk
 import json
-import os
+import random
+import speech_recognition as sr
+import pyttsx3
+import threading
+import string
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 
 # Download NLTK data
 nltk.download('punkt', quiet=True)
 nltk.download('wordnet', quiet=True)
 nltk.download('omw-1.4', quiet=True)
 
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-import string
-
 class UniversityChatbot:
-    def __init__(self):
+    def _init_(self):
         self.lemmatizer = WordNetLemmatizer()
         
-        # Load data from JSON file
-        with open('intents.json', 'r') as file:
-            data = json.load(file)
-            self.intents = {intent["tag"]: intent for intent in data["intents"]}
-            self.programs = data["programs"]
-            self.program_details = data["program_details"]
+        # Load intents from JSON file
+        try:
+            with open('intents.json', 'r') as file:
+                data = json.load(file)
+                self.intents = {intent["tag"]: intent for intent in data["intents"]}
+                self.programs = data["programs"]
+                self.program_details = data["program_details"]
+        except Exception as e:
+            print(f"Error loading intents: {e}")
+            self.intents = {}
+            self.programs = {}
+            self.program_details = {}
+        
+        # Initialize TTS
+        try:
+            self.tts_engine = pyttsx3.init()
+            self.tts_engine.setProperty('rate', 150)
+            self.tts_engine.setProperty('volume', 0.8)
+        except:
+            self.tts_engine = None
         
         self.current_program = None
     
@@ -77,7 +91,7 @@ class UniversityChatbot:
             }
             
             program_name = program_map.get(detected_program)
-            if program_name in self.programs[detected_level]:
+            if program_name in self.programs.get(detected_level, []):
                 full_program_name = f"{detected_level.upper()} {program_name}"
                 self.current_program = full_program_name
                 return full_program_name
@@ -105,6 +119,9 @@ class UniversityChatbot:
     
     def get_response(self, user_input):
         """Generate response with lemmatization and context awareness"""
+        if not self.intents:
+            return "I'm here to help with university admissions! Please ask about programs, requirements, deadlines, or merit criteria."
+        
         tokens = self.preprocess_text(user_input)
         
         # Check for program interest
@@ -143,92 +160,58 @@ class UniversityChatbot:
         else:
             return "I'm here to help with university admission queries! 🎓 You can ask about:\n• Programs we offer (BS/MS/MPhil)\n• Admission requirements\n• Application deadlines\n• Merit criteria\n• Admission procedure\n\nWhat would you like to know?"
 
-def main():
-    chatbot = UniversityChatbot()
+    def speak_response(self, text):
+        """Convert text to speech"""
+        if self.tts_engine:
+            def speak():
+                try:
+                    self.tts_engine.say(text)
+                    self.tts_engine.runAndWait()
+                except Exception as e:
+                    print(f"TTS Error: {e}")
+            
+            thread = threading.Thread(target=speak)
+            thread.start()
 
-    st.set_page_config(
-        page_title="University Admission Chatbot",
-        page_icon="🎓",
-        layout="wide"
-    )
-
-    # Custom CSS
-    st.markdown("""
-    <style>
-    .chat-message {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    .chat-message.user {
-        background-color: #2b313e;
-        color: white;
-        border-left: 5px solid #ff4b4b;
-    }
-    .chat-message.assistant {
-        background-color: #f0f2f6;
-        border-left: 5px solid #00d4aa;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.title("🎓 University Admission Chatbot")
-    st.markdown("### Your AI Admission Assistant")
-
-    # Initialize chat
-    if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "assistant", "content": "👋 **Hello! Welcome to University Admission Office**\n\nI can help you with:\n• Program Information (BS/MS/MPhil)\n• Admission Requirements\n• Application Deadlines\n• Merit Criteria\n• Admission Procedure\n\n**What would you like to know?**"}
-        ]
-
-    # Display messages
-    for message in st.session_state.messages:
-        with st.container():
-            if message["role"] == "user":
-                st.markdown(f'<div class="chat-message user"><strong>You:</strong><br>{message["content"]}</div>', unsafe_allow_html=True)
+    def handle_voice_input(self):
+        """Handle voice input with error handling"""
+        try:
+            recognizer = sr.Recognizer()
+            
+            # Try different microphone sources
+            for microphone_index in range(3):
+                try:
+                    with sr.Microphone(device_index=microphone_index) as source:
+                        recognizer.adjust_for_ambient_noise(source, duration=1)
+                        audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
+                        break
+                except:
+                    continue
             else:
-                st.markdown(f'<div class="chat-message assistant"><strong>Bot:</strong><br>{message["content"]}</div>', unsafe_allow_html=True)
+                with sr.Microphone() as source:
+                    recognizer.adjust_for_ambient_noise(source, duration=1)
+                    audio = recognizer.listen(source, timeout=10, phrase_time_limit=8)
+            
+            # Try English first, then Roman Urdu
+            try:
+                text = recognizer.recognize_google(audio)
+            except:
+                try:
+                    text = recognizer.recognize_google(audio, language='ur-PK')
+                except:
+                    text = recognizer.recognize_google(audio, language='en-US')
+            
+            return text, None
+            
+        except sr.WaitTimeoutError:
+            return None, "No speech detected. Please try again."
+        except sr.UnknownValueError:
+            return None, "Could not understand audio. Please speak clearly."
+        except sr.RequestError as e:
+            return None, f"Speech recognition error: {str(e)}"
+        except Exception as e:
+            return None, f"Microphone error: {str(e)}"
 
-    # Quick actions
-    st.subheader("🚀 Quick Actions")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("📚 Programs"):
-            st.session_state.messages.append({"role": "user", "content": "What programs do you offer?"})
-            response = chatbot.get_response("programs")
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
-    
-    with col2:
-        if st.button("⏰ Deadline"):
-            st.session_state.messages.append({"role": "user", "content": "What is the deadline?"})
-            response = chatbot.get_response("deadline")
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
-    
-    with col3:
-        if st.button("📝 How to Apply"):
-            st.session_state.messages.append({"role": "user", "content": "How to apply?"})
-            response = chatbot.get_response("procedure")
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
-
-    # Chat input
-    user_input = st.text_input("Type your message:", placeholder="Ask about programs, requirements, deadlines...")
-    
-    if user_input:
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        response = chatbot.get_response(user_input)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.rerun()
-
-    # Clear chat
-    if st.button("Clear Chat"):
-        st.session_state.messages = [
-            {"role": "assistant", "content": "👋 Hello! How can I help you today?"}
-        ]
-        st.rerun()
-
-if __name__ == "__main__":
-    main()
+    def reset_conversation(self):
+        """Reset conversation context"""
+        self.current_program = None
