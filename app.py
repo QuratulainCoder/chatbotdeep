@@ -4,21 +4,10 @@ import nltk
 import json
 import os
 
-# Download required NLTK data with error handling
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-
-try:
-    nltk.data.find('corpora/wordnet') 
-except LookupError:
-    nltk.download('wordnet')
-
-try:
-    nltk.data.find('corpora/omw-1.4')
-except LookupError:
-    nltk.download('omw-1.4')
+# Download NLTK data
+nltk.download('punkt', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
 
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
@@ -65,13 +54,11 @@ class UniversityChatbot:
         detected_level = None
         detected_program = None
         
-        # Detect level
         for level, keywords in level_keywords.items():
             if any(keyword in ' '.join(tokens) for keyword in keywords):
                 detected_level = level
                 break
         
-        # Detect program  
         for program, keywords in program_keywords.items():
             if any(keyword in ' '.join(tokens) for keyword in keywords):
                 detected_program = program
@@ -157,220 +144,91 @@ class UniversityChatbot:
             return "I'm here to help with university admission queries! 🎓 You can ask about:\n• Programs we offer (BS/MS/MPhil)\n• Admission requirements\n• Application deadlines\n• Merit criteria\n• Admission procedure\n\nWhat would you like to know?"
 
 def main():
-    # Initialize chatbot
     chatbot = UniversityChatbot()
 
-    # Page configuration
     st.set_page_config(
         page_title="University Admission Chatbot",
         page_icon="🎓",
-        layout="wide",
-        initial_sidebar_state="expanded"
+        layout="wide"
     )
 
     # Custom CSS
     st.markdown("""
     <style>
-    .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .chat-container {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    }
     .chat-message {
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 0.5rem;
         margin-bottom: 1rem;
-        display: flex;
-        flex-direction: column;
     }
     .chat-message.user {
         background-color: #2b313e;
-        border-left: 5px solid #ff4b4b;
         color: white;
+        border-left: 5px solid #ff4b4b;
     }
     .chat-message.assistant {
         background-color: #f0f2f6;
         border-left: 5px solid #00d4aa;
-        color: #1a1d23;
-    }
-    .quick-btn {
-        width: 100%;
-        margin: 0.2rem 0;
-        border-radius: 25px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Header
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 2rem; border-radius: 15px; color: white; text-align: center;">
-        <h1 style="margin: 0; font-size: 2.5rem;">🎓 University Admission Chatbot</h1>
-        <p style="margin: 0; font-size: 1.2rem;">Your AI-powered Admission Assistant with Advanced NLP</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("🎓 University Admission Chatbot")
+    st.markdown("### Your AI Admission Assistant")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Initialize chat history
+    # Initialize chat
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "👋 **Hello! Welcome to University Admission Office**\n\nI'm your AI admission assistant with **advanced NLP features**. I can help you with:\n\n🎯 **Program Information** - BS, MS, MPhil programs\n📋 **Admission Requirements** - Eligibility criteria\n⏰ **Application Deadlines** - Important dates\n🏆 **Merit Information** - Selection criteria\n📝 **Admission Procedure** - How to apply\n\n**What would you like to know?**"}
+            {"role": "assistant", "content": "👋 **Hello! Welcome to University Admission Office**\n\nI can help you with:\n• Program Information (BS/MS/MPhil)\n• Admission Requirements\n• Application Deadlines\n• Merit Criteria\n• Admission Procedure\n\n**What would you like to know?**"}
         ]
 
-    # Main layout
-    col1, col2 = st.columns([2, 1])
+    # Display messages
+    for message in st.session_state.messages:
+        with st.container():
+            if message["role"] == "user":
+                st.markdown(f'<div class="chat-message user"><strong>You:</strong><br>{message["content"]}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="chat-message assistant"><strong>Bot:</strong><br>{message["content"]}</div>', unsafe_allow_html=True)
 
+    # Quick actions
+    st.subheader("🚀 Quick Actions")
+    col1, col2, col3 = st.columns(3)
+    
     with col1:
-        # Chat container
-        st.subheader("💬 Conversation")
-        
-        # Display chat messages
-        for message in st.session_state.messages:
-            with st.container():
-                if message["role"] == "user":
-                    st.markdown(f"""
-                    <div class="chat-message user">
-                        <strong>You:</strong><br>
-                        {message["content"]}
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.markdown(f"""
-                    <div class="chat-message assistant">
-                        <strong>Admission Bot:</strong><br>
-                        {message["content"]}
-                    </div>
-                    """, unsafe_allow_html=True)
-
-        # Input area
-        st.markdown("### 💭 Ask your question:")
-        user_input = st.text_input("Type your message...", label_visibility="collapsed", placeholder="Type your question here...")
-
-        # Handle text input
-        if user_input:
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            response = chatbot.get_response(user_input)
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
-
-        # Clear chat button
-        if st.button("🗑️ Clear Conversation", use_container_width=True):
-            st.session_state.messages = [
-                {"role": "assistant", "content": "👋 Hello! How can I assist you with university admissions today?"}
-            ]
-            chatbot.current_program = None
-            st.rerun()
-
-    with col2:
-        # Quick Actions Sidebar
-        st.subheader("🚀 Quick Actions")
-        
-        # Program Inquiry Buttons
-        st.markdown("**📚 Program Inquiry**")
-        if st.button("🎓 All Programs List", use_container_width=True, key="all_programs"):
+        if st.button("📚 Programs"):
             st.session_state.messages.append({"role": "user", "content": "What programs do you offer?"})
             response = chatbot.get_response("programs")
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
-        
-        col_bs, col_ms = st.columns(2)
-        with col_bs:
-            if st.button("🖥️ BS Programs", use_container_width=True, key="bs_programs"):
-                st.session_state.messages.append({"role": "user", "content": "Tell me about BS programs"})
-                response = chatbot.get_response("bs programs")
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                st.rerun()
-        with col_ms:
-            if st.button("🎯 MS Programs", use_container_width=True, key="ms_programs"):
-                st.session_state.messages.append({"role": "user", "content": "Tell me about MS programs"})
-                response = chatbot.get_response("ms programs")
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                st.rerun()
-        
-        if st.button("🔬 MPhil Programs", use_container_width=True, key="mphil_programs"):
-            st.session_state.messages.append({"role": "user", "content": "Tell me about MPhil programs"})
-            response = chatbot.get_response("mphil programs")
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
-
-        # Admission Process Buttons
-        st.markdown("**📋 Admission Process**")
-        if st.button("⏰ Application Deadline", use_container_width=True, key="deadline"):
+    
+    with col2:
+        if st.button("⏰ Deadline"):
             st.session_state.messages.append({"role": "user", "content": "What is the deadline?"})
             response = chatbot.get_response("deadline")
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
-        
-        if st.button("📝 How to Apply", use_container_width=True, key="procedure"):
-            st.session_state.messages.append({"role": "user", "content": "How to apply for admission?"})
-            response = chatbot.get_response("admission process")
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
-        
-        if st.button("🏆 Merit Criteria", use_container_width=True, key="merit"):
-            st.session_state.messages.append({"role": "user", "content": "What is the merit criteria?"})
-            response = chatbot.get_response("merit criteria")
+    
+    with col3:
+        if st.button("📝 How to Apply"):
+            st.session_state.messages.append({"role": "user", "content": "How to apply?"})
+            response = chatbot.get_response("procedure")
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
 
-        # Express Interest Buttons
-        st.markdown("**🎯 Express Interest**")
-        interest_col1, interest_col2 = st.columns(2)
-        with interest_col1:
-            if st.button("🤖 CS", use_container_width=True, key="cs_interest"):
-                st.session_state.messages.append({"role": "user", "content": "I'm interested in Computer Science"})
-                response = chatbot.get_response("interested in computer science")
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                st.rerun()
-        with interest_col2:
-            if st.button("💻 SE", use_container_width=True, key="se_interest"):
-                st.session_state.messages.append({"role": "user", "content": "I'm interested in Software Engineering"})
-                response = chatbot.get_response("interested in software engineering")
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                st.rerun()
-        
-        interest_col3, interest_col4 = st.columns(2)
-        with interest_col3:
-            if st.button("📊 DS", use_container_width=True, key="ds_interest"):
-                st.session_state.messages.append({"role": "user", "content": "I'm interested in Data Science"})
-                response = chatbot.get_response("interested in data science")
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                st.rerun()
-        with interest_col4:
-            if st.button("🌐 IT", use_container_width=True, key="it_interest"):
-                st.session_state.messages.append({"role": "user", "content": "I'm interested in Information Technology"})
-                response = chatbot.get_response("interested in information technology")
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                st.rerun()
+    # Chat input
+    user_input = st.text_input("Type your message:", placeholder="Ask about programs, requirements, deadlines...")
+    
+    if user_input:
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        response = chatbot.get_response(user_input)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.rerun()
 
-        # NLP Info Section
-        st.markdown("---")
-        with st.expander("🧠 **Advanced NLP Features**"):
-            st.markdown("""
-            **Active Features:**
-            - **Lemmatization**: Understands word variations
-            - **Intent Recognition**: Identifies user queries
-            - **Context Awareness**: Remembers conversation
-            - **Program Validation**: Checks program existence
-            
-            **Try These Examples:**
-            - "I want to study computer science"
-            - "What are admission requirements?"
-            - "When should I apply for masters?"
-            - "Tell me about your programs"
-            """)
-
-    # Footer
-    st.markdown("---")
-    st.markdown(
-        "🎓 **University Admission Chatbot** | "
-        "Powered by Python NLP with Lemmatization | "
-        "🚀 Deployed on Streamlit Cloud"
-    )
+    # Clear chat
+    if st.button("Clear Chat"):
+        st.session_state.messages = [
+            {"role": "assistant", "content": "👋 Hello! How can I help you today?"}
+        ]
+        st.rerun()
 
 if __name__ == "__main__":
     main()
